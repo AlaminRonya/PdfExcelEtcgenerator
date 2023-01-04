@@ -1,6 +1,6 @@
 package com.example.pdfexletcgenerator.controller;
 
-import com.example.pdfexletcgenerator.service.UserPDFExporterService;
+import com.example.pdfexletcgenerator.service.UserExporterService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -15,7 +15,7 @@ import java.util.Date;
 @RequiredArgsConstructor
 public class UserExportController {
 
-    private final UserPDFExporterService userPDFExporterService;
+    private final UserExporterService userExporterService;
 
     @GetMapping("/user/pdf/generate")
     public void generatePDF(HttpServletResponse response) throws IOException {
@@ -27,6 +27,19 @@ public class UserExportController {
         String headerValue = "attachment; filename=users_" + currentDateTime + ".pdf";
         response.setHeader(headerKey, headerValue);
 
-        userPDFExporterService.export(response);
+        userExporterService.exportPDF(response);
+    }
+    @GetMapping("/users/csv/export")
+    public void exportToCSV(HttpServletResponse response) throws IOException {
+        response.setContentType("text/csv");
+        DateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
+        String currentDateTime = dateFormatter.format(new Date());
+
+        String headerKey = "Content-Disposition";
+        String headerValue = "attachment; filename=users_" + currentDateTime + ".csv";
+        response.setHeader(headerKey, headerValue);
+
+        userExporterService.exportCSV(response);
+
     }
 }

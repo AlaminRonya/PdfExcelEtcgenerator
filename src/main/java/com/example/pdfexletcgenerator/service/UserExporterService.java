@@ -9,12 +9,15 @@ import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Service;
+import org.supercsv.io.CsvBeanWriter;
+import org.supercsv.io.ICsvBeanWriter;
+import org.supercsv.prefs.CsvPreference;
 
 import java.awt.*;
 import java.io.IOException;
 
 @Service
-public class UserPDFExporterService {
+public class UserExporterService {
     private void writeTableHeader(PdfPTable table) {
         PdfPCell cell = new PdfPCell();
         cell.setBackgroundColor(Color.BLUE);
@@ -51,7 +54,7 @@ public class UserPDFExporterService {
         }
     }
 
-    public void export(HttpServletResponse response) throws DocumentException, IOException {
+    public void exportPDF(HttpServletResponse response) throws DocumentException, IOException {
         Document document = new Document(PageSize.A4);
         PdfWriter.getInstance(document, response.getOutputStream());
 
@@ -77,5 +80,20 @@ public class UserPDFExporterService {
 
         document.close();
 
+    }
+
+    public void exportCSV(HttpServletResponse response) throws DocumentException, IOException {
+
+        ICsvBeanWriter csvWriter = new CsvBeanWriter(response.getWriter(), CsvPreference.STANDARD_PREFERENCE);
+        String[] csvHeader = {"E-mail", "password", "Roles", "Enabled"};
+        String[] nameMapping = {"email", "password", "roles", "enabled"};
+
+        csvWriter.writeHeader(csvHeader);
+
+        for (User user : UserRepository.getAllUser()) {
+            csvWriter.write(user, nameMapping);
+        }
+
+        csvWriter.close();
     }
 }
