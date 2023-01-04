@@ -7,17 +7,29 @@ import com.lowagie.text.Font;
 import com.lowagie.text.pdf.PdfPCell;
 import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
+import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServletResponse;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
 import org.supercsv.io.CsvBeanWriter;
 import org.supercsv.io.ICsvBeanWriter;
 import org.supercsv.prefs.CsvPreference;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.xssf.usermodel.XSSFFont;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.awt.*;
 import java.io.IOException;
 
+
 @Service
 public class UserExporterService {
+    private XSSFWorkbook workbook= new XSSFWorkbook();
+    private XSSFSheet sheet;
     private void writeTableHeader(PdfPTable table) {
         PdfPCell cell = new PdfPCell();
         cell.setBackgroundColor(Color.BLUE);
@@ -95,5 +107,74 @@ public class UserExporterService {
         }
 
         csvWriter.close();
+    }
+
+
+    private void writeHeaderLine() {
+        sheet = workbook.createSheet("Users");
+
+        Row row = sheet.createRow(0);
+
+        CellStyle style = workbook.createCellStyle();
+        XSSFFont font = workbook.createFont();
+        font.setBold(true);
+        font.setFontHeight(16);
+        style.setFont(font);
+
+        createCell(row, 0, "User ID", style);
+        createCell(row, 1, "E-mail", style);
+        createCell(row, 2, "Full Name", style);
+        createCell(row, 3, "Roles", style);
+        createCell(row, 4, "Enabled", style);
+
+    }
+
+    private void createCell(Row row, int columnCount, Object value, CellStyle style) {
+        sheet.autoSizeColumn(columnCount);
+        Cell cell = row.createCell(columnCount);
+        if (value instanceof Integer) {
+            cell.setCellValue((Integer) value);
+        } else if (value instanceof Boolean) {
+            cell.setCellValue((Boolean) value);
+        }else {
+            cell.setCellValue((String) value);
+        }
+        cell.setCellStyle(style);
+    }
+
+    private void writeDataLines() {
+        int rowCount = 1;
+
+        CellStyle style = workbook.createCellStyle();
+        XSSFFont font = workbook.createFont();
+        font.setFontHeight(14);
+        style.setFont(font);
+
+        for (User user : UserRepository.getAllUser()) {
+            Row row = sheet.createRow(rowCount++);
+            int columnCount = 0;
+
+            createCell(row, columnCount++, columnCount, style);
+            createCell(row, columnCount++, user.getEmail(), style);
+            createCell(row, columnCount++, user.getPassword(), style);
+            createCell(row, columnCount++, user.getRoles().toString(), style);
+            createCell(row, columnCount++, user.isEnabled(), style);
+
+        }
+
+
+    }
+
+
+    public void exportExcel(HttpServletResponse response) throws IOException {
+        writeHeaderLine();
+        writeDataLines();
+
+        ServletOutputStream outputStream = response.getOutputStream();
+        workbook.write(outputStream);
+        workbook.close();
+
+        outputStream.close();
+
     }
 }
