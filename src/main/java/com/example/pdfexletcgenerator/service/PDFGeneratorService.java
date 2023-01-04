@@ -25,7 +25,9 @@ public class PDFGeneratorService {
 
         Paragraph paragraph2 = new Paragraph("This is a paragraph.", fontParagraph);
         paragraph2.setAlignment(Paragraph.ALIGN_LEFT);
-
+        Image jpg = Image.getInstance("E:/Md_Al_Amin.jpg");
+        jpg.scaleAbsolute(30.0f,30.0f);
+        document.add(jpg);
         document.add(paragraph);
         document.add(paragraph2);
         document.close();
